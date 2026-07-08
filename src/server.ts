@@ -9,6 +9,9 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const API_URL = process.env.CINEFORGE_API_URL || 'https://api.iamhc.cn/v1';
 const API_KEY = process.env.CINEFORGE_API_KEY || '';
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 120;
+const requestBucket = new Map<string, { count: number; resetAt: number }>();
 
 type TaskType = 'script' | 'dubbing' | 'asr' | 'remix';
 
@@ -38,6 +41,25 @@ const MODEL_FALLBACK: Record<TaskType, string> = {
 };
 
 app.use(express.json({ limit: '2mb' }));
+app.use((req, res, next) => {
+  const key = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const current = requestBucket.get(key);
+
+  if (!current || current.resetAt <= now) {
+    requestBucket.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    next();
+    return;
+  }
+
+  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
+    res.status(429).json({ error: 'Too many requests. Please retry shortly.' });
+    return;
+  }
+
+  current.count += 1;
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 function selectModel(customModel: string | undefined, task: TaskType): string {
