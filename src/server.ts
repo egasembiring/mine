@@ -41,7 +41,7 @@ const MODEL_FALLBACK: Record<TaskType, string> = {
 };
 
 app.use(express.json({ limit: '2mb' }));
-app.use((req, res, next) => {
+const rateLimitGuard: express.RequestHandler = (req, res, next) => {
   const key = req.ip || req.socket.remoteAddress || 'unknown';
   const now = Date.now();
   const current = requestBucket.get(key);
@@ -59,7 +59,8 @@ app.use((req, res, next) => {
 
   current.count += 1;
   next();
-});
+};
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 function selectModel(customModel: string | undefined, task: TaskType): string {
@@ -197,7 +198,7 @@ function delay(ms: number): Promise<void> {
   });
 }
 
-app.post('/api/generate', async (req, res) => {
+app.post('/api/generate', rateLimitGuard, async (req, res) => {
   const payload = req.body as GenerateRequest;
 
   res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
@@ -300,7 +301,7 @@ app.post('/api/generate', async (req, res) => {
   }
 });
 
-app.get(/.*/, (_req, res) => {
+app.get(/.*/, rateLimitGuard, (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
