@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineForge Core v1</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f8fafc;
+        --panel: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #4f46e5;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+      .shell { max-width: 1080px; margin: 0 auto; padding: 28px 20px 40px; }
+      .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+      .badge {
+        background: #eef2ff;
+        color: var(--accent);
+        border-radius: 999px;
+        font-weight: 600;
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+      select,
+      input,
+      textarea,
+      button {
+        font: inherit;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: var(--panel);
+        color: var(--text);
+      }
+      textarea { min-height: 110px; resize: vertical; }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.07);
+        padding: 18px;
+      }
+      .grid { display: grid; gap: 12px; }
+      .label { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; display: inline-block; }
+      .tabs { display: flex; gap: 8px; margin: 14px 0; }
+      .tab-btn {
+        border-radius: 10px;
+        background: #f1f5f9;
+        border: 1px solid transparent;
+        color: var(--muted);
+        padding: 9px 14px;
+        cursor: pointer;
+      }
+      .tab-btn.active {
+        background: #eef2ff;
+        color: var(--accent);
+        border-color: #c7d2fe;
+      }
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      button.cta {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+      }
+      #logs {
+        margin-top: 16px;
+        white-space: pre-wrap;
+        max-height: 360px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 12px;
+        padding: 14px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+      .hint { font-size: 12px; color: var(--muted); }
+      @media (max-width: 860px) { .row { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="topbar">
+        <div>
+          <div class="badge">CineForge Core v1</div>
+          <h1 data-i18n="title">Cloud-Native Video Orchestrator</h1>
+        </div>
+        <div>
+          <label class="label" for="language" data-i18n="language">Language</label>
+          <select id="language">
+            <option value="id">Indonesia</option>
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel grid">
+        <div>
+          <label class="label" for="customModel" data-i18n="customModel">Custom Model ID (Colok Bebas)</label>
+          <input id="customModel" placeholder="contoh: DeepSeek-V4-Pro" />
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="video" data-i18n="tabVideo">Pabrik Video (Pixelle + SkyReels Mode)</button>
+          <button class="tab-btn" data-tab="dubbing" data-i18n="tabDubbing">Sulih Suara & Translasi (KrillinAI Mode)</button>
+        </div>
+
+        <div id="tab-video" class="tab-content active grid">
+          <div>
+            <label class="label" for="synopsis" data-i18n="synopsis">Sinopsis Besar</label>
+            <textarea id="synopsis" placeholder="Masukkan sinopsis utama serial..."></textarea>
+          </div>
+
+          <div class="row">
+            <div>
+              <label class="label" for="episodeCount" data-i18n="episodes">Jumlah Episode</label>
+              <input id="episodeCount" type="number" min="1" max="100" value="60" />
+            </div>
+            <div>
+              <label class="label" for="presetTask" data-i18n="presetTask">Preset Tugas</label>
+              <select id="presetTask">
+                <option value="standard">Standard Long-Run</option>
+                <option value="fast">Fast Batch Render</option>
+                <option value="remix">Remix Focused</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="referenceUrls" data-i18n="reference">Multi Image/Video URL (Maks 10)</label>
+            <textarea id="referenceUrls" placeholder="https://example.com/ref1.jpg\nhttps://example.com/ref2.mp4"></textarea>
+            <div class="hint" data-i18n="referenceHint">Pisahkan URL dengan baris baru, spasi, atau koma.</div>
+          </div>
+
+          <button id="runVideo" class="cta" data-i18n="startVideo">Mulai Produksi Batch</button>
+        </div>
+
+        <div id="tab-dubbing" class="tab-content grid">
+          <div>
+            <label class="label" for="sourceMediaUrl" data-i18n="sourceUrl">URL Video/Audio Lama</label>
+            <input id="sourceMediaUrl" placeholder="https://example.com/old-media.mp4" />
+          </div>
+
+          <div class="row">
+            <div>
+              <label class="label" for="dubbingLanguage" data-i18n="targetLang">Bahasa Tujuan</label>
+              <select id="dubbingLanguage">
+                <option>Indonesia</option>
+                <option>English</option>
+                <option>中文</option>
+                <option>日本語</option>
+              </select>
+            </div>
+            <div>
+              <label class="label" for="dubbingVoice" data-i18n="voice">Vokal Baru</label>
+              <select id="dubbingVoice">
+                <option>Natural Voice</option>
+                <option>Warm Narrator</option>
+                <option>Energetic Host</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="runDubbing" class="cta" data-i18n="startDubbing">Mulai Sulih Suara</button>
+        </div>
+      </div>
+
+      <div id="logs" aria-live="polite" data-i18n-placeholder="outputPlaceholder">Status produksi akan muncul di sini...</div>
+    </div>
+
+    <script>
+      const translations = {
+        id: {
+          title: 'Cloud-Native Video Orchestrator',
+          language: 'Bahasa',
+          customModel: 'Custom Model ID (Colok Bebas)',
+          tabVideo: 'Pabrik Video (Pixelle + SkyReels Mode)',
+          tabDubbing: 'Sulih Suara & Translasi (KrillinAI Mode)',
+          synopsis: 'Sinopsis Besar',
+          episodes: 'Jumlah Episode',
+          presetTask: 'Preset Tugas',
+          reference: 'Multi Image/Video URL (Maks 10)',
+          referenceHint: 'Pisahkan URL dengan baris baru, spasi, atau koma.',
+          startVideo: 'Mulai Produksi Batch',
+          sourceUrl: 'URL Video/Audio Lama',
+          targetLang: 'Bahasa Tujuan',
+          voice: 'Vokal Baru',
+          startDubbing: 'Mulai Sulih Suara',
+          outputPlaceholder: 'Status produksi akan muncul di sini...',
+          running: 'Menjalankan pipeline...'
+        },
+        en: {
+          title: 'Cloud-Native Video Orchestrator',
+          language: 'Language',
+          customModel: 'Custom Model ID (Plug Any)',
+          tabVideo: 'Video Factory (Pixelle + SkyReels Mode)',
+          tabDubbing: 'Voice Dub & Translation (KrillinAI Mode)',
+          synopsis: 'Master Synopsis',
+          episodes: 'Episode Count',
+          presetTask: 'Task Preset',
+          reference: 'Multi Image/Video URL (Max 10)',
+          referenceHint: 'Separate URLs with newline, spaces, or commas.',
+          startVideo: 'Start Batch Production',
+          sourceUrl: 'Old Video/Audio URL',
+          targetLang: 'Target Language',
+          voice: 'New Voice',
+          startDubbing: 'Start Dubbing',
+          outputPlaceholder: 'Production status logs will appear here...',
+          running: 'Running pipeline...'
+        },
+        zh: {
+          title: '云原生视频编排器',
+          language: '语言',
+          customModel: '自定义模型 ID（自由接入）',
+          tabVideo: '视频工厂（Pixelle + SkyReels 模式）',
+          tabDubbing: '配音与翻译（KrillinAI 模式）',
+          synopsis: '剧情总纲',
+          episodes: '集数',
+          presetTask: '任务预设',
+          reference: '多图/视频 URL（最多 10 个）',
+          referenceHint: '可用换行、空格或逗号分隔 URL。',
+          startVideo: '开始批量生产',
+          sourceUrl: '旧视频/音频 URL',
+          targetLang: '目标语言',
+          voice: '新声音',
+          startDubbing: '开始配音',
+          outputPlaceholder: '生产日志会显示在这里...',
+          running: '正在运行流程...'
+        }
+      };
+
+      const languageSelect = document.getElementById('language');
+      const logs = document.getElementById('logs');
+      let currentLanguage = 'id';
+
+      function applyTranslations(language) {
+        currentLanguage = language;
+        const dictionary = translations[language] || translations.id;
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.getAttribute('data-i18n');
+          if (dictionary[key]) el.textContent = dictionary[key];
+        });
+
+        if (!logs.textContent.trim() || logs.dataset.placeholderActive === 'true') {
+          logs.textContent = dictionary.outputPlaceholder;
+          logs.dataset.placeholderActive = 'true';
+        }
+      }
+
+      function setActiveTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        document.querySelectorAll('.tab-content').forEach((panel) => {
+          panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+        });
+      }
+
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+      });
+
+      languageSelect.addEventListener('change', (event) => {
+        applyTranslations(event.target.value);
+      });
+
+      function appendLog(line) {
+        if (logs.dataset.placeholderActive === 'true') {
+          logs.textContent = '';
+          logs.dataset.placeholderActive = 'false';
+        }
+        logs.textContent += `${line}\n`;
+        logs.scrollTop = logs.scrollHeight;
+      }
+
+      async function runPipeline(payload) {
+        logs.textContent = `${translations[currentLanguage].running}\n`;
+        logs.dataset.placeholderActive = 'false';
+
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok || !response.body) {
+          appendLog('Request failed.');
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const event = JSON.parse(line);
+              appendLog(`[${event.status.toUpperCase()}] ${event.message}`);
+            } catch {
+              appendLog(line);
+            }
+          }
+        }
+      }
+
+      document.getElementById('runVideo').addEventListener('click', () => {
+        runPipeline({
+          mode: 'video',
+          customModel: document.getElementById('customModel').value,
+          synopsis: document.getElementById('synopsis').value,
+          episodeCount: Number(document.getElementById('episodeCount').value || 1),
+          presetTask: document.getElementById('presetTask').value,
+          referenceUrls: document.getElementById('referenceUrls').value
+        });
+      });
+
+      document.getElementById('runDubbing').addEventListener('click', () => {
+        runPipeline({
+          mode: 'dubbing',
+          customModel: document.getElementById('customModel').value,
+          sourceMediaUrl: document.getElementById('sourceMediaUrl').value,
+          dubbingLanguage: document.getElementById('dubbingLanguage').value,
+          dubbingVoice: document.getElementById('dubbingVoice').value
+        });
+      });
+
+      applyTranslations('id');
+    </script>
+  </body>
+</html>
