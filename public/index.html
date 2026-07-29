@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mine QRIS SaaS</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Mine QRIS SaaS</h1>
+      <p>Dashboard pembayaran digital untuk merchant</p>
+    </header>
+
+    <main>
+      <section class="card" id="authCard">
+        <h2>Autentikasi</h2>
+        <div class="auth-grid">
+          <form id="registerForm">
+            <h3>Register</h3>
+            <input name="name" placeholder="Nama" required />
+            <input name="email" placeholder="Email" type="email" required />
+            <input name="password" placeholder="Password" type="password" required />
+            <input name="businessName" placeholder="Nama Toko" required />
+            <button type="submit">Daftar</button>
+          </form>
+          <form id="loginForm">
+            <h3>Login</h3>
+            <input name="email" placeholder="Email" type="email" required />
+            <input name="password" placeholder="Password" type="password" required />
+            <button type="submit">Masuk</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="card hidden" id="dashboardCard">
+        <h2>Dashboard</h2>
+        <div id="merchantInfo"></div>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="card hidden" id="productCard">
+        <h2>Produk</h2>
+        <form id="productForm" class="inline-form">
+          <input name="name" placeholder="Nama Produk" required />
+          <input name="sku" placeholder="SKU" required />
+          <input name="price" placeholder="Harga" type="number" min="1" required />
+          <button type="submit">Tambah Produk</button>
+        </form>
+        <table>
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>SKU</th>
+              <th>Harga</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+      </section>
+
+      <section class="card hidden" id="transactionCard">
+        <h2>Transaksi</h2>
+        <form id="transactionForm" class="inline-form">
+          <input name="amount" type="number" min="1" placeholder="Nominal" required />
+          <input name="customerName" placeholder="Nama Pelanggan" />
+          <input name="notes" placeholder="Catatan" />
+          <button type="submit">Buat QRIS</button>
+        </form>
+        <div id="qrisResult"></div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nominal</th>
+              <th>Status</th>
+              <th>Customer</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="transactionsBody"></tbody>
+        </table>
+      </section>
+
+      <p id="message"></p>
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

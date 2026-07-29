@@ -1,0 +1,110 @@
+:root {
+  font-family: Arial, sans-serif;
+  color: #1b1b1b;
+  background: #f6f7fb;
+}
+
+body {
+  margin: 0;
+}
+
+header {
+  background: linear-gradient(120deg, #091f5a, #2059e4);
+  color: #fff;
+  padding: 24px;
+}
+
+main {
+  max-width: 1000px;
+  margin: 24px auto;
+  padding: 0 16px 40px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 30px rgba(4, 20, 61, 0.08);
+}
+
+.auth-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+input,
+button {
+  border: 1px solid #c7cee6;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+button {
+  cursor: pointer;
+  background: #1640b6;
+  color: #fff;
+  border: 0;
+}
+
+button.delete {
+  background: #a21d2f;
+}
+
+button.secondary {
+  background: #2e8753;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  border-bottom: 1px solid #e3e9ff;
+  padding: 8px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  background: #edf2ff;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+#message {
+  font-weight: bold;
+}
+
+#qrisResult img {
+  max-width: 200px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 8px;
+}
