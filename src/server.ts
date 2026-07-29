@@ -392,7 +392,7 @@ app.use("/api", (_req, res) => {
   res.status(404).json({ message: "Endpoint tidak ditemukan" });
 });
 
-app.get("*", (_req, res) => {
+app.get(/.*/, (_req, res) => {
   res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
 
