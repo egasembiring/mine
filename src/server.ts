@@ -40,6 +40,11 @@ function parsePositiveNumber(value: unknown): number {
   return Number.isFinite(amount) && amount > 0 ? amount : NaN;
 }
 
+function paramToString(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
 function createSession(params: {
   merchantId: string;
   actorType: ActorType;
@@ -73,7 +78,7 @@ function auth(req: AuthenticatedRequest, res: Response, next: NextFunction): voi
 
   const token = header.slice(7);
   const db = getDb();
-  const rawSession = db.sessions.find((item) => item.token === token) as Session | (Session & { userId?: string }) | undefined;
+  const rawSession = db.sessions.find((item) => item.token === token) as any;
 
   if (!rawSession) {
     res.status(401).json({ message: "Invalid session" });
@@ -384,7 +389,7 @@ app.post("/api/team-members", auth, requireRole("owner"), (req: AuthenticatedReq
 
 app.post("/api/team-members/:id/deactivate", auth, requireRole("owner"), (req: AuthenticatedRequest, res) => {
   const merchantId = req.merchant!.id;
-  const memberId = req.params.id;
+  const memberId = paramToString(req.params.id);
   const db = getDb();
   const existing = db.teamMembers.find((item) => item.id === memberId && item.merchantId === merchantId && item.active);
 
@@ -463,7 +468,7 @@ app.post("/api/products", auth, requireRole("owner"), (req: AuthenticatedRequest
 });
 
 app.put("/api/products/:id", auth, requireRole("owner"), (req: AuthenticatedRequest, res) => {
-  const productId = req.params.id;
+  const productId = paramToString(req.params.id);
   const name = sanitizeText(req.body?.name, 80);
   const sku = sanitizeText(req.body?.sku, 40);
   const price = parsePositiveNumber(req.body?.price);
@@ -516,7 +521,7 @@ app.put("/api/products/:id", auth, requireRole("owner"), (req: AuthenticatedRequ
 });
 
 app.delete("/api/products/:id", auth, requireRole("owner"), (req: AuthenticatedRequest, res) => {
-  const productId = req.params.id;
+  const productId = paramToString(req.params.id);
   const merchantId = req.merchant!.id;
 
   let removed = false;
@@ -611,7 +616,7 @@ app.post("/api/transactions", auth, (req: AuthenticatedRequest, res) => {
 
 app.post("/api/transactions/:id/pay", auth, requireRole("owner"), (req: AuthenticatedRequest, res) => {
   const merchantId = req.merchant!.id;
-  const transactionId = req.params.id;
+  const transactionId = paramToString(req.params.id);
 
   const db = getDb();
   const existing = db.transactions.find((item) => item.id === transactionId && item.merchantId === merchantId);
@@ -653,7 +658,8 @@ app.post("/api/transactions/:id/pay", auth, requireRole("owner"), (req: Authenti
 
 app.get("/api/transactions/:id/qris", auth, (req: AuthenticatedRequest, res) => {
   const merchantId = req.merchant!.id;
-  const transaction = getDb().transactions.find((item) => item.id === req.params.id && item.merchantId === merchantId);
+  const transactionId = paramToString(req.params.id);
+  const transaction = getDb().transactions.find((item) => item.id === transactionId && item.merchantId === merchantId);
 
   if (!transaction) {
     res.status(404).json({ message: "Transaksi tidak ditemukan" });
