@@ -17,7 +17,7 @@
         <h2>Autentikasi</h2>
         <div class="auth-grid">
           <form id="registerForm">
-            <h3>Register</h3>
+            <h3>Register Owner</h3>
             <input name="name" placeholder="Nama" required />
             <input name="email" placeholder="Email" type="email" required />
             <input name="password" placeholder="Password" type="password" required />
@@ -25,7 +25,7 @@
             <button type="submit">Daftar</button>
           </form>
           <form id="loginForm">
-            <h3>Login</h3>
+            <h3>Login (Owner/Cashier)</h3>
             <input name="email" placeholder="Email" type="email" required />
             <input name="password" placeholder="Password" type="password" required />
             <button type="submit">Masuk</button>
@@ -39,9 +39,30 @@
         <div class="stats" id="stats"></div>
       </section>
 
+      <section class="card hidden owner-only" id="teamCard">
+        <h2>Team Management</h2>
+        <form id="teamForm" class="inline-form">
+          <input name="name" placeholder="Nama Cashier" required />
+          <input name="email" placeholder="Email Cashier" type="email" required />
+          <input name="password" placeholder="Password" type="password" required />
+          <button type="submit">Tambah Cashier</button>
+        </form>
+        <table>
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="teamBody"></tbody>
+        </table>
+      </section>
+
       <section class="card hidden" id="productCard">
         <h2>Produk</h2>
-        <form id="productForm" class="inline-form">
+        <form id="productForm" class="inline-form owner-only">
           <input name="name" placeholder="Nama Produk" required />
           <input name="sku" placeholder="SKU" required />
           <input name="price" placeholder="Harga" type="number" min="1" required />
@@ -80,6 +101,22 @@
             </tr>
           </thead>
           <tbody id="transactionsBody"></tbody>
+        </table>
+      </section>
+
+      <section class="card hidden" id="auditCard">
+        <h2>Audit Log</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>Aktor</th>
+              <th>Aksi</th>
+              <th>Target</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody id="auditBody"></tbody>
         </table>
       </section>
 

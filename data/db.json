@@ -1,7 +1,9 @@
 {
   "users": [],
   "merchants": [],
+  "teamMembers": [],
   "products": [],
   "transactions": [],
-  "sessions": []
+  "sessions": [],
+  "auditLogs": []
 }

@@ -4,12 +4,17 @@ Aplikasi fullstack SaaS untuk simulasi layanan pembayaran digital bergaya QRIS d
 
 ## Fitur Utama
 
-- Registrasi dan login merchant
-- Dashboard ringkasan bisnis (produk, transaksi, pending, omzet)
+- Registrasi dan login multi-peran (Owner + Cashier)
+- Team management (owner dapat tambah dan nonaktifkan cashier)
+- Role-based access control:
+  - Owner: kelola produk, set transaksi lunas, kelola tim
+  - Cashier: buat transaksi dan pantau data operasional
+- Dashboard ringkasan bisnis (produk, transaksi, pending, tim aktif, omzet)
 - Manajemen produk (tambah, ubah, hapus)
 - Manajemen transaksi (buat transaksi, generate payload QRIS, set lunas)
+- Audit log aktivitas operasional
 - Endpoint API backend dengan validasi input dan error handling
-- UI frontend berbasis dashboard yang langsung terhubung ke API
+- UI frontend dashboard yang langsung terhubung ke API
 - Penyimpanan data lokal JSON (`/home/runner/work/mine/mine/data/db.json`)
 
 ## Stack
@@ -41,6 +46,9 @@ npm start
 - `POST /api/auth/login`
 - `GET /api/me`
 - `GET /api/dashboard`
+- `GET /api/team-members`
+- `POST /api/team-members`
+- `POST /api/team-members/:id/deactivate`
 - `GET /api/products`
 - `POST /api/products`
 - `PUT /api/products/:id`
@@ -49,7 +57,8 @@ npm start
 - `POST /api/transactions`
 - `POST /api/transactions/:id/pay`
 - `GET /api/transactions/:id/qris`
+- `GET /api/audit-logs`
 
 ## Catatan
 
-Project ini adalah implementasi SaaS fullstack versi production-style MVP yang sudah tersinkron dari backend sampai frontend dalam satu repo.
+Project ini adalah implementasi SaaS fullstack production-style MVP yang tersinkron dari backend sampai frontend dalam satu repo.

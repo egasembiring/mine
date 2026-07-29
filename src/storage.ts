@@ -7,9 +7,11 @@ const DB_PATH = path.join(process.cwd(), "data", "db.json");
 const EMPTY_DB: Database = {
   users: [],
   merchants: [],
+  teamMembers: [],
   products: [],
   transactions: [],
-  sessions: []
+  sessions: [],
+  auditLogs: []
 };
 
 function ensureDataDir(): void {
@@ -35,13 +37,15 @@ function readDb(): Database {
   }
 
   try {
-    const parsed = JSON.parse(raw) as Database;
+    const parsed = JSON.parse(raw) as Partial<Database>;
     return {
       users: parsed.users ?? [],
       merchants: parsed.merchants ?? [],
+      teamMembers: parsed.teamMembers ?? [],
       products: parsed.products ?? [],
       transactions: parsed.transactions ?? [],
-      sessions: parsed.sessions ?? []
+      sessions: parsed.sessions ?? [],
+      auditLogs: parsed.auditLogs ?? []
     };
   } catch {
     writeDb(EMPTY_DB);

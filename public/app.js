@@ -1,18 +1,23 @@
 const state = {
-  token: localStorage.getItem("token") || ""
+  token: localStorage.getItem("token") || "",
+  actor: null
 };
 
 const el = {
-  authCard: document.getElementById("authCard"),
   dashboardCard: document.getElementById("dashboardCard"),
+  teamCard: document.getElementById("teamCard"),
   productCard: document.getElementById("productCard"),
   transactionCard: document.getElementById("transactionCard"),
+  auditCard: document.getElementById("auditCard"),
   registerForm: document.getElementById("registerForm"),
   loginForm: document.getElementById("loginForm"),
+  teamForm: document.getElementById("teamForm"),
   productForm: document.getElementById("productForm"),
   transactionForm: document.getElementById("transactionForm"),
+  teamBody: document.getElementById("teamBody"),
   productsBody: document.getElementById("productsBody"),
   transactionsBody: document.getElementById("transactionsBody"),
+  auditBody: document.getElementById("auditBody"),
   merchantInfo: document.getElementById("merchantInfo"),
   stats: document.getElementById("stats"),
   message: document.getElementById("message"),
@@ -45,8 +50,20 @@ function currency(value) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
 }
 
+function isOwner() {
+  return state.actor?.role === "owner";
+}
+
 function toggleAuth(isLoggedIn) {
-  [el.dashboardCard, el.productCard, el.transactionCard].forEach((node) => node.classList.toggle("hidden", !isLoggedIn));
+  [el.dashboardCard, el.teamCard, el.productCard, el.transactionCard, el.auditCard].forEach((node) =>
+    node.classList.toggle("hidden", !isLoggedIn)
+  );
+}
+
+function applyRoleVisibility() {
+  document.querySelectorAll(".owner-only").forEach((node) => {
+    node.classList.toggle("hidden", !isOwner());
+  });
 }
 
 function saveToken(token) {
@@ -56,16 +73,40 @@ function saveToken(token) {
 
 async function refreshDashboard() {
   const data = await api("/api/dashboard");
-  const summary = data.summary;
+  state.actor = data.actor;
+  applyRoleVisibility();
 
-  el.merchantInfo.innerHTML = `<b>${data.merchant.businessName}</b> · ${data.merchant.city} · ${data.merchant.category}`;
+  const summary = data.summary;
+  el.merchantInfo.innerHTML = `<b>${data.merchant.businessName}</b> · ${data.merchant.city} · ${data.merchant.category} · <span class="badge">${data.actor.role}</span> ${data.actor.name}`;
   el.stats.innerHTML = [
     ["Total Produk", summary.totalProducts],
     ["Total Transaksi", summary.totalTransactions],
     ["Pending", summary.pendingTransactions],
+    ["Tim Aktif", summary.teamMembers],
     ["Omzet", currency(summary.revenue)]
   ]
     .map(([label, value]) => `<div class="stat"><small>${label}</small><div>${value}</div></div>`)
+    .join("");
+}
+
+async function refreshTeamMembers() {
+  if (!isOwner()) {
+    el.teamBody.innerHTML = "";
+    return;
+  }
+
+  const members = await api("/api/team-members");
+  el.teamBody.innerHTML = members
+    .map(
+      (item) => `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.email}</td>
+        <td><span class="badge">${item.role}</span></td>
+        <td><button class="delete" data-deactivate-member="${item.id}">Nonaktifkan</button></td>
+      </tr>
+    `
+    )
     .join("");
 }
 
@@ -78,7 +119,7 @@ async function refreshProducts() {
         <td>${item.name}</td>
         <td>${item.sku}</td>
         <td>${currency(item.price)}</td>
-        <td><button class="delete" data-delete-product="${item.id}">Hapus</button></td>
+        <td>${isOwner() ? `<button class="delete" data-delete-product="${item.id}">Hapus</button>` : "-"}</td>
       </tr>
     `
     )
@@ -95,13 +136,24 @@ async function refreshTransactions() {
         <td>${currency(item.amount)}</td>
         <td>${item.status}</td>
         <td>${item.customerName}</td>
-        <td>
-          ${
-            item.status === "pending"
-              ? `<button class="secondary" data-pay-transaction="${item.id}">Set Lunas</button>`
-              : "-"
-          }
-        </td>
+        <td>${item.status === "pending" && isOwner() ? `<button class="secondary" data-pay-transaction="${item.id}">Set Lunas</button>` : "-"}</td>
+      </tr>
+    `
+    )
+    .join("");
+}
+
+async function refreshAuditLogs() {
+  const logs = await api("/api/audit-logs?limit=30");
+  el.auditBody.innerHTML = logs
+    .map(
+      (item) => `
+      <tr>
+        <td>${new Date(item.createdAt).toLocaleString("id-ID")}</td>
+        <td>${item.actorName} <span class="badge">${item.actorRole}</span></td>
+        <td>${item.action}</td>
+        <td>${item.targetType}:${item.targetId.slice(0, 8)}</td>
+        <td>${item.details}</td>
       </tr>
     `
     )
@@ -110,7 +162,8 @@ async function refreshTransactions() {
 
 async function bootLoggedInView() {
   toggleAuth(true);
-  await Promise.all([refreshDashboard(), refreshProducts(), refreshTransactions()]);
+  await refreshDashboard();
+  await Promise.all([refreshProducts(), refreshTransactions(), refreshAuditLogs(), refreshTeamMembers()]);
 }
 
 el.registerForm.addEventListener("submit", async (event) => {
@@ -120,7 +173,7 @@ el.registerForm.addEventListener("submit", async (event) => {
     const payload = Object.fromEntries(form.entries());
     const result = await api("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });
     saveToken(result.token);
-    setMessage("Registrasi berhasil");
+    setMessage("Registrasi owner berhasil");
     await bootLoggedInView();
   } catch (error) {
     setMessage(error.message, true);
@@ -141,6 +194,20 @@ el.loginForm.addEventListener("submit", async (event) => {
   }
 });
 
+el.teamForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  try {
+    const form = new FormData(el.teamForm);
+    const payload = Object.fromEntries(form.entries());
+    await api("/api/team-members", { method: "POST", body: JSON.stringify(payload) });
+    el.teamForm.reset();
+    setMessage("Cashier ditambahkan");
+    await Promise.all([refreshDashboard(), refreshTeamMembers(), refreshAuditLogs()]);
+  } catch (error) {
+    setMessage(error.message, true);
+  }
+});
+
 el.productForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
@@ -150,7 +217,7 @@ el.productForm.addEventListener("submit", async (event) => {
     await api("/api/products", { method: "POST", body: JSON.stringify(payload) });
     el.productForm.reset();
     setMessage("Produk ditambahkan");
-    await Promise.all([refreshDashboard(), refreshProducts()]);
+    await Promise.all([refreshDashboard(), refreshProducts(), refreshAuditLogs()]);
   } catch (error) {
     setMessage(error.message, true);
   }
@@ -168,7 +235,7 @@ el.transactionForm.addEventListener("submit", async (event) => {
     el.qrisResult.innerHTML = `<p>Payload: ${qris.payload}</p><img src="${qris.imageUrl}" alt="QRIS" />`;
     el.transactionForm.reset();
     setMessage("Transaksi pending berhasil dibuat");
-    await Promise.all([refreshDashboard(), refreshTransactions()]);
+    await Promise.all([refreshDashboard(), refreshTransactions(), refreshAuditLogs()]);
   } catch (error) {
     setMessage(error.message, true);
   }
@@ -178,12 +245,24 @@ document.addEventListener("click", async (event) => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
 
+  const memberId = target.dataset.deactivateMember;
+  if (memberId) {
+    try {
+      await api(`/api/team-members/${memberId}/deactivate`, { method: "POST" });
+      setMessage("Member dinonaktifkan");
+      await Promise.all([refreshDashboard(), refreshTeamMembers(), refreshAuditLogs()]);
+    } catch (error) {
+      setMessage(error.message, true);
+    }
+    return;
+  }
+
   const deleteId = target.dataset.deleteProduct;
   if (deleteId) {
     try {
       await api(`/api/products/${deleteId}`, { method: "DELETE" });
       setMessage("Produk dihapus");
-      await Promise.all([refreshDashboard(), refreshProducts()]);
+      await Promise.all([refreshDashboard(), refreshProducts(), refreshAuditLogs()]);
     } catch (error) {
       setMessage(error.message, true);
     }
@@ -195,7 +274,7 @@ document.addEventListener("click", async (event) => {
     try {
       await api(`/api/transactions/${payId}/pay`, { method: "POST" });
       setMessage("Transaksi diset lunas");
-      await Promise.all([refreshDashboard(), refreshTransactions()]);
+      await Promise.all([refreshDashboard(), refreshTransactions(), refreshAuditLogs()]);
     } catch (error) {
       setMessage(error.message, true);
     }
@@ -215,6 +294,7 @@ document.addEventListener("click", async (event) => {
   } catch {
     localStorage.removeItem("token");
     state.token = "";
+    state.actor = null;
     setMessage("Sesi berakhir, login ulang", true);
   }
 })();

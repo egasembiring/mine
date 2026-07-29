@@ -1,4 +1,6 @@
 export type TransactionStatus = "pending" | "paid";
+export type ActorRole = "owner" | "cashier";
+export type ActorType = "owner" | "team_member";
 
 export interface User {
   id: string;
@@ -14,6 +16,17 @@ export interface Merchant {
   businessName: string;
   city: string;
   category: string;
+  createdAt: string;
+}
+
+export interface TeamMember {
+  id: string;
+  merchantId: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+  role: ActorRole;
+  active: boolean;
   createdAt: string;
 }
 
@@ -42,14 +55,32 @@ export interface Transaction {
 
 export interface Session {
   token: string;
-  userId: string;
+  merchantId: string;
+  actorType: ActorType;
+  actorId: string;
+  role: ActorRole;
+  createdAt: string;
+}
+
+export interface AuditLog {
+  id: string;
+  merchantId: string;
+  actorType: ActorType;
+  actorName: string;
+  actorRole: ActorRole;
+  action: string;
+  targetType: string;
+  targetId: string;
+  details: string;
   createdAt: string;
 }
 
 export interface Database {
   users: User[];
   merchants: Merchant[];
+  teamMembers: TeamMember[];
   products: Product[];
   transactions: Transaction[];
   sessions: Session[];
+  auditLogs: AuditLog[];
 }
